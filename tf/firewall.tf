@@ -1,6 +1,6 @@
 resource "google_compute_firewall" "ssh-rule" {
   name = "ssh"
-  network = google_compute_network.vpc_network.kube-vpc
+  network = google_compute_network.kube-vpc.id
   allow {
     protocol = "tcp"
     ports = ["22"]
