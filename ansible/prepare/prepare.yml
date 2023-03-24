@@ -1,0 +1,29 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: Apt upgrade
+  apt: 
+    upgrade: dist
+
+- name: Install containerd
+  apt:
+    name: containerd
+    state: present
+
+- name: Install kubeadm
+  apt:
+    name: kubeadm
+    state: present
+
+- name: Install kubelet
+  apt:
+    name: kubelet
+    state: present
+
+- name: Install kubectl
+  apt:
+    name: kubectl
+    state: present

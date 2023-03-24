@@ -1,0 +1,9 @@
+---
+- hosts: 
+  - controllers
+  - workers
+  become: yes
+
+  tasks: 
+    - name: Prepare nodes
+      include_tasks: prepare.yml
