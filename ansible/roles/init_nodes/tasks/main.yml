@@ -11,6 +11,8 @@
       - ca-certificates
       - curl
       - software-properties-common
+      - iptables
+      - iptables-persistent
     state: present
 
 - name: Add Kubernetes repository key
@@ -28,6 +30,7 @@
     name:
       - kubelet
       - kubeadm
+      - kubectl
     state: present
 
 - name: Enable and start kubelet service
@@ -35,3 +38,4 @@
     name: kubelet
     state: started
     enabled: yes
+

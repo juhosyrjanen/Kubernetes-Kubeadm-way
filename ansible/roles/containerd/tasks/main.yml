@@ -1,0 +1,49 @@
+- name: Download containerd binary
+  get_url:
+    url: "https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz"
+    dest: /tmp/containerd.tar.gz
+
+- name: Extract containerd binary
+  unarchive:
+    src: /tmp/containerd.tar.gz
+    dest: /usr/local
+    copy: no
+    creates: "/usr/local/bin/containerd"
+    extra_opts: "--no-same-owner"
+
+- name: Download runc binary
+  get_url:
+    url: "https://github.com/opencontainers/runc/releases/download/v{{ runc_version }}/runc.amd64"
+    dest: /usr/local/bin/runc
+    mode: "u+x"
+
+- name: Download CNI plugins binary
+  get_url:
+    url: "https://github.com/containernetworking/plugins/releases/download/v{{ cni_plugins_version }}/cni-plugins-linux-amd64-v{{ cni_plugins_version }}.tgz"
+    dest: /tmp/cni-plugins.tgz
+
+- name: Extract CNI plugins binary
+  unarchive:
+    src: /tmp/cni-plugins.tgz
+    dest: /opt/cni
+    copy: no
+    creates: "/opt/cni/bin"
+
+- name: Create containerd service file
+  copy:
+    src: containerd.service
+    dest: /etc/systemd/system/containerd.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+     
+- name: Enable containerd service
+  systemd:
+    name: containerd
+    enabled: yes
+    state: started
+

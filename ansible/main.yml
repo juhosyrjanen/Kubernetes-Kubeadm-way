@@ -1,14 +1,26 @@
 
 ---
-- name: Setup Kubernetes control plane
+- name: Initialize nodes 
+  hosts: controllers #,workers
+  become: yes
+  roles:
+    - init_nodes
+
+- name: Install containerd 
+  hosts: controllers #,workers 
+  become: yes
+  vars:
+    containerd_version: "1.7.0"
+    runc_version: "1.1.4"
+    cni_plugins_version: "1.2.0"
+  roles: 
+    - containerd
+
+- name: Initiate control plane 
   hosts: controllers
-  become: yes
-  roles:
+  become: yes 
+  vars:
+    kubeadm_init_extra_opts: ""
+    kubeadm_join_extra_opts: ""
+  roles: 
     - k8s_control_plane
-
-- name: Setup Kubernetes worker nodes
-  hosts: workers
-  become: yes
-  roles:
-    - k8s_worker_node
-

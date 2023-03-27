@@ -2,7 +2,7 @@ resource "google_compute_instance" "controller" {
   for_each = toset([ "${var.region}-a", "${var.region}-b", "${var.region}-c" ])
 
   name         = "controller-${each.key}"
-  machine_type = "g1-small"
+  machine_type = "e2-medium"
   zone         = each.key
   tags = ["allow-ssh"]
 

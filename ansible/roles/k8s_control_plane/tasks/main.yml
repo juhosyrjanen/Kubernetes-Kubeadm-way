@@ -1,38 +1,52 @@
 ---
-- name: Update apt cache
-  ansible.builtin.apt:
-    update_cache: yes
-    cache_valid_time: 3600
+- name: Initialize Kubernetes control plane on the first controller node
+  command: kubeadm init --control-plane-endpoint "{{ hostvars[groups['controllers'][0]]['ansible_default_ipv4']['address'] }}" --apiserver-advertise-address "{{ hostvars[groups['controllers'][0]]['ansible_default_ipv4']['address'] }}" --upload-certs {{ kubeadm_init_extra_opts }}
+  args:
+    creates: /etc/kubernetes/manifests/kube-apiserver.yaml
+  register: kubeadm_output
 
-- name: Install required packages
-  ansible.builtin.apt:
-    name:
-      - apt-transport-https
-      - ca-certificates
-      - curl
-      - software-properties-common
-    state: present
+- name: Save join token and CA certificate hash
+  set_fact:
+    kubeadm_join_token: "{{ kubeadm_output.stdout_lines | select('match', 'kubeadm join') | list | first }}"
+    kubeadm_ca_cert_hash: "{{ kubeadm_output.stdout_lines | select('match', 'discovery-token-ca-cert-hash') | list | first | regex_replace('discovery-token-ca-cert-hash: ', '') }}"
 
-- name: Add Kubernetes repository key
-  ansible.builtin.apt_key:
-    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-    state: present
+- name: Fetch kubeconfig from the first controller node
+  fetch:
+    src: "/etc/kubernetes/admin.conf"
+    dest: "{{ lookup('env', 'HOME') }}/.kube/config"
+    flat: yes
+    fail_on_missing: yes
+    validate_checksum: yes
+  delegate_to: "{{ groups['controllers'][0] }}"
 
-- name: Add Kubernetes repository
-  ansible.builtin.apt_repository:
-    repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
-    state: present
+- name: Copy kubeconfig to root user's home directory
+  copy:
+    content: "{{ hostvars[groups['controllers'][0]]['kubeconfig']['client_raw'] }}"
+    dest: /root/.kube/config
+    force: yes
 
-- name: Install Kubernetes components
-  ansible.builtin.apt:
-    name:
-      - kubelet
-      - kubeadm
-      - kubectl
-    state: present
+- name: Copy kubeconfig to local user's home directory
+  copy:
+    src: "{{ lookup('env', 'HOME') }}/.kube/config"
+    dest: "{{ playbook_dir }}/config"
+    mode: 0600
 
-- name: Enable and start kubelet service
-  ansible.builtin.systemd:
+- name: Copy kubelet configuration file
+  copy:
+    content: |
+      apiVersion: kubelet.config.k8s.io/v1beta1
+      kind: KubeletConfiguration
+      cgroupDriver: systemd
+      cpuManagerPolicy: static
+    dest: /etc/kubernetes/kubelet.conf
+    force: yes
+
+- name: Restart kubelet service
+  service:
     name: kubelet
-    state: started
-    enabled: yes
+    state: restarted
+
+- name: Add controller nodes to the cluster
+  command: "{{ kubeadm_join_token }} --discovery-token-ca-cert-hash sha256:{{ kubeadm_ca_cert_hash }} {{ kubeadm_join_extra_opts }}"
+  when: inventory_hostname in groups['controllers'][1:]
+
