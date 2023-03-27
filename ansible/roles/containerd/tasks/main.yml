@@ -28,6 +28,7 @@
     dest: /opt/cni
     copy: no
     creates: "/opt/cni/bin"
+    extra_opts: "--no-same-owner"
 
 - name: Create containerd service file
   copy:

@@ -39,3 +39,11 @@
     state: started
     enabled: yes
 
+- name: Enable iptables
+  ansible.builtin.shell: |
+    echo 1 > /proc/sys/net/ipv4/ip_forward
+    echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables
+    modprobe br_netfilter
+    iptables -P FORWARD ACCEPT
+    iptables-save > /etc/iptables/rules.v4
+

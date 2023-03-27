@@ -1,5 +1,11 @@
 # Collection of Ansible roles 
 
+Usage: 
+
+```shell
+ansible-playbook -i ansible/inventory.ini -u kube --private-key id_rsa ansible/main.yml
+```
+
 ## Summary
 
 The purpose of this Ansible collection is to prepare nodes and perform bootstrapping of a HA Kubernetes cluster. 
