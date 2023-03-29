@@ -1,0 +1,29 @@
+
+---
+- name: Install keepalived and HAproxy
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - keepalived
+    - haproxy
+
+- name: Configure keepalived
+  template:
+    src: templates/keepalived.cfg.j2
+    dest: /etc/keepalived/keepalived.conf
+
+- name: Configure HAproxy
+  template:
+    src: templates/haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+
+- name: Enable and start keepalived and HAproxy
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  with_items:
+    - keepalived
+    - haproxy
+

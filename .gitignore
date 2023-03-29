@@ -3,3 +3,7 @@ id_rsa.pub
 *tfstate
 tf/.terraform/**
 config
+ideas/*
+ansible/admin.conf
+vagrant/.vagrant/*
+vagrant/2*

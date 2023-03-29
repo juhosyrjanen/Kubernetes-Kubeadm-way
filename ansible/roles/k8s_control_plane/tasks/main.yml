@@ -1,52 +1,81 @@
 ---
-- name: Initialize Kubernetes control plane on the first controller node
-  command: kubeadm init --control-plane-endpoint "{{ hostvars[groups['controllers'][0]]['ansible_default_ipv4']['address'] }}" --apiserver-advertise-address "{{ hostvars[groups['controllers'][0]]['ansible_default_ipv4']['address'] }}" --upload-certs {{ kubeadm_init_extra_opts }}
-  args:
-    creates: /etc/kubernetes/manifests/kube-apiserver.yaml
-  register: kubeadm_output
+- name: Initialize the first control plane node
+  command: kubeadm init --upload-certs --control-plane-endpoint "{{ kubernetes_lb_ip }}:6443" --pod-network-cidr=10.244.0.0/16
+  run_once: true
+  register: kubeadm_init_output
 
-- name: Save join token and CA certificate hash
+- name: Extract certificate key
   set_fact:
-    kubeadm_join_token: "{{ kubeadm_output.stdout_lines | select('match', 'kubeadm join') | list | first }}"
-    kubeadm_ca_cert_hash: "{{ kubeadm_output.stdout_lines | select('match', 'discovery-token-ca-cert-hash') | list | first | regex_replace('discovery-token-ca-cert-hash: ', '') }}"
+    certificate_key: "{{ kubeadm_init_output.stdout | regex_search('(?<=--certificate-key )[a-zA-Z0-9]+') }}"
+  run_once: true
+  when: "'Using certificate key:' in kubeadm_init_output.stdout"
 
-- name: Fetch kubeconfig from the first controller node
+- name: Make admin.conf readable
+  file:
+    path: /etc/kubernetes/admin.conf
+    mode: 0644
+  when: inventory_hostname == target_controller
+
+- name: Fetch kubeconfig file
   fetch:
-    src: "/etc/kubernetes/admin.conf"
-    dest: "{{ lookup('env', 'HOME') }}/.kube/config"
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ playbook_dir }}/admin.conf"
     flat: yes
-    fail_on_missing: yes
-    validate_checksum: yes
-  delegate_to: "{{ groups['controllers'][0] }}"
+  when: inventory_hostname == target_controller
 
-- name: Copy kubeconfig to root user's home directory
+- name: Set up healthcheck 
   copy:
-    content: "{{ hostvars[groups['controllers'][0]]['kubeconfig']['client_raw'] }}"
-    dest: /root/.kube/config
-    force: yes
+    src: files/nginx.conf
+    dest: /etc/nginx/sites-available/kubernetes.default.svc.cluster.local
 
-- name: Copy kubeconfig to local user's home directory
-  copy:
-    src: "{{ lookup('env', 'HOME') }}/.kube/config"
-    dest: "{{ playbook_dir }}/config"
-    mode: 0600
+- name: Enable healthcheck 
+  file:
+    src: /etc/nginx/sites-available/kubernetes.default.svc.cluster.local
+    dest: /etc/nginx/sites-enabled/kubernetes.default.svc.cluster.local
+    state: link
 
-- name: Copy kubelet configuration file
-  copy:
-    content: |
-      apiVersion: kubelet.config.k8s.io/v1beta1
-      kind: KubeletConfiguration
-      cgroupDriver: systemd
-      cpuManagerPolicy: static
-    dest: /etc/kubernetes/kubelet.conf
-    force: yes
-
-- name: Restart kubelet service
+- name: Restart nginx
   service:
-    name: kubelet
+    name: nginx
     state: restarted
 
-- name: Add controller nodes to the cluster
-  command: "{{ kubeadm_join_token }} --discovery-token-ca-cert-hash sha256:{{ kubeadm_ca_cert_hash }} {{ kubeadm_join_extra_opts }}"
-  when: inventory_hostname in groups['controllers'][1:]
+- name: Wait for healthcheck to return 200
+  shell: curl --cacert /etc/kubernetes/pki/ca.crt https://{{ kubernetes_lb_ip }}:6443/version
+  register: healthcheck
+  until: not healthcheck.failed
+  retries: 30
+  delay: 5 
+  when: inventory_hostname == target_controller
 
+- name: Create the kubeadm join command
+  shell: kubeadm token create --print-join-command
+  run_once: true
+  register: kubeadm_join_command_output
+  when: inventory_hostname == target_controller
+
+- name: Set kubeadm_join_command fact
+  set_fact:
+    kubeadm_join_command: "{{ kubeadm_join_command_output.stdout }} --control-plane --certificate-key {{ certificate_key }} --v=5"  
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  with_items: "{{ groups['all'] }}"
+  when: inventory_hostname == target_controller
+
+- name: Debug kubeadm_join_command
+  debug:
+    var: kubeadm_join_command
+
+- name: Initialize the other control plane nodes
+  command: "sudo {{ kubeadm_join_command }}"
+  when: inventory_hostname != target_controller
+
+- name: Set up healthcheck on other controllers
+  copy:
+    src: files/nginx.conf
+    dest: /etc/nginx/sites-available/kubernetes.default.svc.cluster.local
+  when: inventory_hostname != target_controller
+
+- name: Restart nginx
+  service:
+    name: nginx
+    state: restarted

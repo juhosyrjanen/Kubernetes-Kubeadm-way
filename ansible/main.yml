@@ -1,11 +1,10 @@
-
 ---
 - name: Initialize nodes 
   hosts: controllers #,workers
   become: yes
   roles:
     - init_nodes
-
+    
 - name: Install containerd 
   hosts: controllers #,workers 
   become: yes
@@ -16,11 +15,23 @@
   roles: 
     - containerd
 
+- name: Configure NGINX loadbalancer
+  hosts: loadbalancer
+  become: yes
+  vars:
+    loadbalancer_targets: "{{ groups['controllers'] }}"
+    keepalived_interface: "eth0" # Set this to the interface on which keepalived should listen
+    keepalived_vip: "{{ kubernetes_lb_ip }}" # The virtual IP for Kubernetes API load balancing
+    keepalived_vrouter_id: 50 # The keepalived router ID
+    keepalived_priority: 100 # The keepalived priority
+    haproxy_backend_servers: "{{ groups['controllers'] }}" 
+  roles:
+    - loadbalancer
+
 - name: Initiate control plane 
   hosts: controllers
   become: yes 
   vars:
-    kubeadm_init_extra_opts: ""
-    kubeadm_join_extra_opts: ""
+    target_controller: controllers_1
   roles: 
     - k8s_control_plane

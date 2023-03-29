@@ -29,4 +29,13 @@ service. w
 
 ### k8s_control_plane
 
-WIP
+This role uses `kubeadm` to bootstrap Kubernetes control plane on the three controller nodes. It starts with the first
+controller in the hosts list perfroming the following;
+
+- `kubeadm init` - initialise the first controller in the control plane. 
+- Fetches the `kubeconfig` to the local machine's Ansible directory
+- Sets up an NGINX healthcheck, as GCP network load balancer only supports HTTP healthchecks.
+- Prepares the `kubeadm join` command to be ran on the rest of the controllers
+- Then runs the join command on other controllers and sets up healthcheck on those ones as well.
+
+

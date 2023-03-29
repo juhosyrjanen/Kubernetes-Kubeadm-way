@@ -13,6 +13,7 @@
       - software-properties-common
       - iptables
       - iptables-persistent
+      - nginx
     state: present
 
 - name: Add Kubernetes repository key
@@ -39,6 +40,13 @@
     state: started
     enabled: yes
 
+- name: Allow 2379
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: 2379
+    jump: ACCEPT
+
 - name: Enable iptables
   ansible.builtin.shell: |
     echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -47,3 +55,17 @@
     iptables -P FORWARD ACCEPT
     iptables-save > /etc/iptables/rules.v4
 
+- name: Make sure /etc/cni/net.d is present
+  ansible.builtin.file:
+    path: /etc/cni/net.d
+    state: directory
+
+- name: Copy CNI config
+  ansible.builtin.copy:
+    src: 10-cni.conf
+    dest: /etc/cni/net.d/10-cni.conf
+
+- name: Restart kubelet
+  ansible.builtin.systemd:
+    name: kubelet
+    state: restarted 
