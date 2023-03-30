@@ -25,7 +25,7 @@ A basic roles that updates and installs Kubernetes components to the nodes direc
 ### containerd
 
 This role installs `containerd`, `runc` and needed CNI plugins directly from official binaries. It also creates a `containerd`
-service. w
+service.
 
 ### k8s_control_plane
 
