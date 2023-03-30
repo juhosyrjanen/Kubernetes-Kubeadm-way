@@ -1,0 +1,19 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+certificateKey: "{{ certificate_key }}"
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+kubernetesVersion: stable
+apiServer:
+  extraArgs: 
+    advertise-address: "{{ kubernetes_lb_ip }}"
+controlPlaneEndpoint: "{{ kubernetes_lb_ip }}:6443"
+etcd:
+  local:
+    extraArgs:
+      listen-client-urls: "http://{{ hostvars['controller1']['ansible_host'] }}:2379"
+      advertise-client-urls: "{{ kubernetes_lb_ip }}:2379"
+      listen-peer-urls: "http://{{ hostvars['controller1']['ansible_host'] }}:2380"
+      initial-advertise-peer-urls: "http://{{ hostvars['controller1']['ansible_host'] }}:2380"
+

@@ -14,6 +14,7 @@
       - iptables
       - iptables-persistent
       - nginx
+      - zip
     state: present
 
 - name: Add Kubernetes repository key
@@ -69,3 +70,9 @@
   ansible.builtin.systemd:
     name: kubelet
     state: restarted 
+
+- name: Disable ufw
+  ansible.builtin.service:
+    name: ufw
+    state: stopped
+    enabled: no

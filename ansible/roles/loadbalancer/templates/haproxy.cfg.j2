@@ -16,7 +16,27 @@ frontend kubernetes_api
 backend kubernetes_api_backend
     mode tcp
     balance roundrobin
-    {% for server in haproxy_backend_servers %}
-    server controller{{ loop.index }} {{ server }}:6443 check
-    {% endfor %}
+    server controller1 {{ hostvars['controller1']['ansible_host'] }}:6443 check
+    server controller2 {{ hostvars['controller2']['ansible_host'] }}:6443 check
+    server controller3 {{ hostvars['controller3']['ansible_host'] }}:6443 check
+
+frontend etcd
+    bind {{ kubernetes_lb_ip }}:2379
+    mode tcp
+    default_backend etcd_backend
+
+backend etcd_backend
+    mode tcp
+    balance roundrobin
+    server controller1 {{ hostvars['controller1']['ansible_host'] }}:2379 check
+    server controller2 {{ hostvars['controller2']['ansible_host'] }}:2379 check
+    server controller3 {{ hostvars['controller3']['ansible_host'] }}:2379 check
+
+listen stats
+    bind *:9000
+    mode http
+    stats enable
+    stats hide-version
+    stats realm Haproxy\ Statistics
+    stats uri /
 

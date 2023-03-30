@@ -1,2 +1,5 @@
 ---
 loadbalancer_listen_port: 6443
+loadbalancer_targets: "{{ groups['controllers'] }}"
+haproxy_backend_servers: "{{ groups['controllers'] }}" 
+

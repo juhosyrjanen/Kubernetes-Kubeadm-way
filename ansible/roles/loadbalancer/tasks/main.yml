@@ -1,29 +1,27 @@
-
 ---
-- name: Install keepalived and HAproxy
+- name: Install HAproxy
   apt:
-    name: "{{ item }}"
+    name: haproxy
     state: present
-  with_items:
-    - keepalived
-    - haproxy
-
-- name: Configure keepalived
-  template:
-    src: templates/keepalived.cfg.j2
-    dest: /etc/keepalived/keepalived.conf
 
 - name: Configure HAproxy
   template:
     src: templates/haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
 
-- name: Enable and start keepalived and HAproxy
-  service:
-    name: "{{ item }}"
-    state: started
-    enabled: true
+- name: Add controllers to hosts file
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
+    state: present
   with_items:
-    - keepalived
-    - haproxy
+    - "{{ hostvars['controller1']['ansible_host'] }} controller1"
+    - "{{ hostvars['controller2']['ansible_host'] }} controller2"
+    - "{{ hostvars['controller3']['ansible_host'] }} controller3"
+
+- name: Start HAproxy
+  service:
+    name: haproxy 
+    state: restarted
+    enabled: true
 

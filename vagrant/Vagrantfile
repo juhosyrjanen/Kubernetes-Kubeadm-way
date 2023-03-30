@@ -1,4 +1,3 @@
-
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
@@ -38,7 +37,7 @@ end
     file.write("[controllers]\n")
     (1..N).each do |i|
       private_key_path = File.expand_path(".vagrant/machines/controller#{i}/virtualbox/private_key", __dir__)
-      file.write("controllers_#{i} ansible_host=192.168.56.10#{i} ansible_user=vagrant ansible_ssh_private_key_file=#{private_key_path}\n")
+      file.write("controller#{i} ansible_host=192.168.56.10#{i} ansible_user=vagrant ansible_ssh_private_key_file=#{private_key_path}\n")
     end
 
     file.write("\n[loadbalancers]\n")

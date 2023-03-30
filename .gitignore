@@ -6,4 +6,4 @@ config
 ideas/*
 ansible/admin.conf
 vagrant/.vagrant/*
-vagrant/2*
+vagrant/*log
