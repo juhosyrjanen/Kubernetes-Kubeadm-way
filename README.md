@@ -6,12 +6,14 @@ This project contains some automation to boot up Kubernetes cluster using Ansibl
 
 There's also Terraform to allow provisioning the infrastructure in Google Cloud, however still WIP.
 
+Worker nodes coming up.
+
 ## Requirements 
 
 - VirtualBox
 - Vagrant 
 - Ansible
-- Free local IP C-block
+- Free local IP C-bloc`
 - (GCP) 
 
 ## Usage
@@ -25,6 +27,15 @@ vagrant up
 Bootstrap Kubernetes cluster
 ```shell
 ansible-playbook -i ansible/inventory.ini  ansible/main.yml
+```
+
+After playbook has finished running, `kubeconfig` can be found in Ansible directory.
+```shell
+kubectl get nodes --kubeconfig admin.conf
+NAME          STATUS   ROLES           AGE     VERSION
+controller1   Ready    control-plane   2m26s   v1.26.3
+controller2   Ready    control-plane   86s     v1.26.3
+controller3   Ready    control-plane   24s     v1.26.3
 ```
 
 ## HAproxy
