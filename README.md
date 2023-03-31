@@ -17,6 +17,7 @@ TODO:
 - Vagrant 
 - Ansible
 - Free local IP C-block
+- SSH key pair located in project root
 - (GCP) 
 
 ## Usage
