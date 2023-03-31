@@ -44,6 +44,12 @@ controller2   Ready    control-plane   86s     v1.26.3
 controller3   Ready    control-plane   24s     v1.26.3
 ```
 
+To destroy everything, run
+```shell
+cd vagrant
+vagrant destroy -f
+```
+
 ## HAproxy
 
 Load balancing ports 6443 (Kube API) and 2379 (etcd)
