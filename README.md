@@ -6,19 +6,25 @@ This project contains some automation to boot up Kubernetes cluster using Ansibl
 
 There's also Terraform to allow provisioning the infrastructure in Google Cloud, however still WIP.
 
-Worker nodes coming up.
+TODO: 
+
+- Worker nodes
+- Cilium
 
 ## Requirements 
 
 - VirtualBox
 - Vagrant 
 - Ansible
-- Free local IP C-bloc`
+- Free local IP C-block
 - (GCP) 
 
 ## Usage
 
-Start virtual machines
+You can use any virtual machines you want. This project uses Vagrant to automate VirtualBox VM installation.
+As long as Ansible inventory is populated any VM should work.
+
+Start virtual machines with Vagrant
 ```shell
 cd vagrant
 vagrant up
@@ -39,5 +45,7 @@ controller3   Ready    control-plane   24s     v1.26.3
 ```
 
 ## HAproxy
+
+Load balancing ports 6443 (Kube API) and 2379 (etcd)
 
 See health check status page http://192.168.56.120:9000/
