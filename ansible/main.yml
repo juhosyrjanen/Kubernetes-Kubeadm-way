@@ -1,12 +1,12 @@
 ---
 - name: Initialize nodes 
-  hosts: controllers #,workers
+  hosts: controllers,workers
   become: yes
   roles:
     - init_nodes
     
 - name: Install containerd 
-  hosts: controllers #,workers 
+  hosts: controllers,workers 
   become: yes
   vars:
     containerd_version: "1.7.0"
@@ -15,7 +15,7 @@
   roles: 
     - containerd
 
-- name: Configure NGINX loadbalancer
+- name: Configure HAproxy loadbalancer
   hosts: loadbalancer
   become: yes
   roles:
@@ -28,3 +28,9 @@
     target_controller: controller1
   roles: 
     - k8s_control_plane
+
+- name: Join workers
+  hosts: controllers,workers
+  become: yes
+  roles: 
+    - k8s_worker_nodes

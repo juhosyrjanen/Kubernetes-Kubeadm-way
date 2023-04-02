@@ -10,7 +10,19 @@
 - name: Set kubeadm join command for worker nodes
   set_fact:
     kubeadm_worker_join_command: "{{ kubeadm_join_command_output.stdout }}"
+  when: "'{{ inventory_hostname }}' in groups['workers']"
+
+- name: Debug join command
+  debug:
+    var: kubeadm_worker_join_command
+  when: "'{{ inventory_hostname }}' in groups['workers']"
 
 - name: Join worker nodes to the cluster
   command: "{{ kubeadm_worker_join_command }}"
+  when: "'{{ inventory_hostname }}' in groups['workers']"
+
+- name: Label worker nodes
+  shell: >
+    kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/worker=worker --kubeconfig /etc/kubernetes/admin.conf
+  delegate_to: "{{ groups['controllers'][0] }}"
   when: "'{{ inventory_hostname }}' in groups['workers']"

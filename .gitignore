@@ -5,5 +5,6 @@ tf/.terraform/**
 config
 ideas/*
 ansible/admin.conf
+ansible/inventory.ini
 vagrant/.vagrant/*
 vagrant/*log
