@@ -2,6 +2,10 @@
 - name: Initialize nodes 
   hosts: controllers,workers
   become: yes
+  vars: 
+    kubeadm_version: "1.26.3-00"
+    kubelet_version: "1.26.3-00"
+    kubectl_version: "1.26.3-00"
   roles:
     - init_nodes
     
@@ -34,3 +38,4 @@
   become: yes
   roles: 
     - k8s_worker_nodes
+
