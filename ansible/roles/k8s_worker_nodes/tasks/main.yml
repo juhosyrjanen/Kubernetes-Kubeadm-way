@@ -21,8 +21,16 @@
   command: "{{ kubeadm_worker_join_command }}"
   when: "'{{ inventory_hostname }}' in groups['workers']"
 
+- name: Copy admin.conf from local source to remote target
+  copy:
+    src: "{{ playbook_dir }}/admin.conf" 
+    dest: /etc/kubernetes/admin.conf
+    owner: root
+    group: root
+    mode: 0644
+
 - name: Label worker nodes
   shell: >
     kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/worker=worker --kubeconfig /etc/kubernetes/admin.conf
-  delegate_to: "{{ groups['controllers'][0] }}"
   when: "'{{ inventory_hostname }}' in groups['workers']"
+
