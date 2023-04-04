@@ -8,7 +8,6 @@ There's also Terraform to allow provisioning the infrastructure in Google Cloud,
 
 TODO: 
 
-- Worker nodes
 - Cilium
 
 ## Requirements 
@@ -17,7 +16,6 @@ TODO:
 - Vagrant 
 - Ansible
 - SSH key pair located in project root
-- (GCP) 
 
 ## Usage
 
