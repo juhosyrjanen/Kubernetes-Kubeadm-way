@@ -30,10 +30,11 @@
 - name: Install Kubernetes components
   ansible.builtin.apt:
     name:
-      - kubelet
-      - kubeadm
-      - kubectl
+      - "kubelet={{ kubelet_version }}"
+      - "kubeadm={{ kubeadm_version }}"
+      - "kubectl={{ kubectl_version }}"
     state: present
+    update_cache: yes
 
 - name: Enable and start kubelet service
   ansible.builtin.systemd:
@@ -76,3 +77,4 @@
     name: ufw
     state: stopped
     enabled: no
+
