@@ -53,3 +53,7 @@ vagrant destroy -f
 Load balancing ports 6443 (Kube API) and 2379 (etcd)
 
 See health check status page http://192.168.56.120:9000/
+
+## Architecture
+
+![architecture](local_kube.png)
